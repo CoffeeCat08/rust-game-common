@@ -1,5 +1,20 @@
 // common/src/utility/random.rs
 
+//! # 乱数・確率判定モジュール
+//!
+//! このモジュールは、ゲーム内での「命中判定」「アイテムドロップ」などの
+//! 運要素を制御するための堅牢な部品を提供します。
+//!
+//! ## 主な機能
+//! - `RandomError`: 列挙型
+//!   * `NoSelectionMade`: 抽選リストを渡されたが、乱数判定の結果、全て外れたという状態
+//!   * `InvalidWeights`: 重みのリストが0やデータが無いときなど。運用方法に間違いがある状態
+//! - `chance`: シンプルな成功率判定
+//! - `range`: ダメージのゆらぎなどの範囲計算
+//! - `weighted_choice`: 重みに基づく単一選択
+//! - `weighted_choice_or_failed`: 複数の抽選の内、最初の選択を返す
+//! - `weighted_choice_all`: 複数の抽選を行い、当選したものすべてを返す
+
 use rand::distr::{Distribution, weighted::WeightedIndex};
 use std::ops::RangeInclusive;
 
@@ -12,6 +27,8 @@ pub enum RandomError {
 }
 
 /// 指定された確率に基づき、成功か失敗かを判定する
+///
+/// # Examples
 /// ```rust
 /// # use rust_game_common::utility::random::chance;
 /// if chance(0.32){
@@ -20,7 +37,7 @@ pub enum RandomError {
 /// ```
 ///
 /// # Arguments
-/// * `success_rate` - 成功確率 (0.0 ～ 1.0)
+/// * `success_rate` - `f32` 成功確率 (0.0 ～ 1.0)
 ///
 /// # Returns
 /// 成功した場合は `true`、失敗した場合は `false`
@@ -39,8 +56,8 @@ pub fn chance(success_rate: f32) -> bool {
 /// ```
 ///
 /// # Arguments
-/// * `base_value` - 基準となる数値
-/// * `range` - 乗算する倍率の範囲
+/// * `base_value` - `f32` 基準となる数値
+/// * `range` - `RangeInclusive<f32>` 乗算する倍率の範囲
 ///
 /// # Returns
 /// 乱数を乗算した結果
@@ -52,15 +69,22 @@ pub fn range(base_value: f32, range: RangeInclusive<f32>) -> f32 {
 ///
 /// 「毒判定、次に麻痺判定」のように、各項目が独立して判定されるケースに使用する
 ///
+/// # Examples
+/// ```rust
+/// # use rust_game_common::utility::random::weighted_choice_or_failed;
+/// let status_effects = [0.1, 0.05]; // 毒10%, 麻痺5%
+/// let result = weighted_choice_or_failed(&status_effects);
+/// ```
+///
 /// # Arguments
-/// * `list` - 抽選したい数値のVec
+/// * `list` - `&[f32]` 抽選したい数値のVec
 ///
 /// # Returns
 /// 当選した要素のインデックス番号 (`usize`)
 ///
 /// # Errors
 /// リスト内のすべての抽選に外れた場合、`RandomError::NoSelectionMade` を返す
-pub fn weighted_choice_or_failed(list: &Vec<f32>) -> Result<usize, RandomError> {
+pub fn weighted_choice_or_failed(list: &[f32]) -> Result<usize, RandomError> {
     for (i, &rate) in list.iter().enumerate() {
         if chance(rate) {
             return Ok(i);
@@ -74,15 +98,22 @@ pub fn weighted_choice_or_failed(list: &Vec<f32>) -> Result<usize, RandomError> 
 ///
 /// 「一度の判定で複数のアイテムを同時にドロップする」ようなケースに使用する
 ///
+/// /// # Examples
+/// ```rust
+/// # use rust_game_common::utility::random::weighted_choice_all;
+/// let drop_rates = [0.5, 0.1, 0.01]; // 銅50%, 銀10%, 金1%
+/// let results = weighted_choice_all(&drop_rates);
+/// ```
+///
 /// # Arguments
-/// * `list` - 抽選したい数値のVec
+/// * `list` - `&[f32]` 抽選したい数値のVec
 ///
 /// # Returns
 /// 当選した全インデックスのリスト (`Vec<usize>`)
 ///
 /// # Errors
 /// 一つも当選しなかった場合、`RandomError::NoSelectionMade` を返す
-pub fn weighted_choice_all(list: &Vec<f32>) -> Result<Vec<usize>, RandomError> {
+pub fn weighted_choice_all(list: &[f32]) -> Result<Vec<usize>, RandomError> {
     let result: Vec<usize> = list
         .iter()
         .enumerate()
@@ -101,8 +132,15 @@ pub fn weighted_choice_all(list: &Vec<f32>) -> Result<Vec<usize>, RandomError> {
 ///
 /// 合計値に対する比重で抽選を行うため、必ずどれか一つを選びたい場合（ドロップテーブルなど）に使用する
 ///
+/// # Examples
+/// ```rust
+/// # use rust_game_common::utility::random::weighted_choice;
+/// let weights = [70.0, 25.0, 5.0]; // コモン, レア, 超レア の比率
+/// let result = weighted_choice(&weights);
+/// ```
+///
 /// # Arguments
-/// * `weights` - 各項目の重みのスライス
+/// * `weights` - `&[f32]` 各項目の重みのスライス
 ///
 /// # Returns
 /// 抽選された項目のインデックス番号 (`usize`)
@@ -110,10 +148,10 @@ pub fn weighted_choice_all(list: &Vec<f32>) -> Result<Vec<usize>, RandomError> {
 /// # Errors
 /// - 重みの合計が0以下の場合、またはリストが空の場合に `RandomError::InvalidWeights` を返す
 pub fn weighted_choice(weights: &[f32]) -> Result<usize, RandomError> {
-    let mut rng = rand::rng(); // 最新のRNG取得方法 [3]
+    let mut rng = rand::rng();
 
     // WeightedIndex を作成重みの合計が0以下だとエラーになるため Result で扱う
-    let dist = WeightedIndex::new(weights).map_err(|_| RandomError::InvalidWeights)?; // [4], [6]
+    let dist = WeightedIndex::new(weights).map_err(|_| RandomError::InvalidWeights)?;
 
     // 抽選を実行
     Ok(dist.sample(&mut rng))

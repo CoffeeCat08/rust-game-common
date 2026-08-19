@@ -1,2 +1,4 @@
 /target
-*.md
+*md
+!Readme.md
+!readme.md
