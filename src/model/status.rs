@@ -24,7 +24,7 @@ pub enum StatusError {
     MaxLimitReached,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct BoundedStatus {
     pub current: f32,
     pub min: f32,
