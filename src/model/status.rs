@@ -56,7 +56,7 @@ impl BoundedStatus {
         }
     }
 
-    /// 時間経過時のstatsuの減算変化
+    /// 時間経過時のstatusの減算変化
     ///
     /// # Examples
     /// ```rust
@@ -87,7 +87,7 @@ impl BoundedStatus {
         }
     }
 
-    /// 時間経過時のstatsuの加算変化
+    /// 時間経過時のstatusの加算変化
     ///
     /// # Examples
     /// ```rust
@@ -118,7 +118,7 @@ impl BoundedStatus {
         }
     }
 
-    /// 攻撃等のactionによるstatsuの減算変化
+    /// 攻撃等のactionによるstatusの減算変化
     ///
     /// # Examples
     /// ```rust
@@ -148,7 +148,7 @@ impl BoundedStatus {
         }
     }
 
-    /// 回復等のactionによるstatsuの加算変化
+    /// 回復等のactionによるstatusの加算変化
     ///
     /// # Examples
     /// ```rust
