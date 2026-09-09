@@ -32,6 +32,31 @@ pub struct BoundedStatus {
     pub weight: f32, // game内1秒の変化量
 }
 
+pub trait StatusEffect<T> {
+    fn subtract(&mut self, input: T) -> Result<(), StatusError>;
+    fn add(&mut self, input: T) -> Result<(), StatusError>;
+}
+
+impl StatusEffect<f32> for BoundedStatus {
+    fn subtract(&mut self, amount: f32) -> Result<(), StatusError> {
+        self.apply_action_subtract(amount)
+    }
+
+    fn add(&mut self, amount: f32) -> Result<(), StatusError> {
+        self.apply_action_add(amount)
+    }
+}
+
+impl StatusEffect<Duration> for BoundedStatus {
+    fn subtract(&mut self, duration_time: Duration) -> Result<(), StatusError> {
+        self.tick_subtract(duration_time)
+    }
+
+    fn add(&mut self, duration_time: Duration) -> Result<(), StatusError> {
+        self.tick_add(duration_time)
+    }
+}
+
 impl BoundedStatus {
     /// 新しいstatusを構築する
     ///
