@@ -157,6 +157,18 @@ pub fn weighted_choice(weights: &[f32]) -> Result<usize, RandomError> {
     Ok(dist.sample(&mut rng))
 }
 
+/// 0 から count - 1 までの範囲から、等確率でインデックスを1つ選択する
+///
+/// # Examples
+/// ```rust
+/// # use rust_game_common::utility::random::pick_one;
+/// let characters = ["A","B"];
+/// let target_index = pick_one(characters.len());
+/// ```
+pub fn pick_one(count: usize) -> usize {
+    rand::random_range(0..count)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -188,5 +200,34 @@ mod tests {
         let empty_weights: Vec<f32> = vec![];
         let result = weighted_choice(&empty_weights);
         assert_eq!(result, Err(RandomError::InvalidWeights));
+    }
+
+    #[test]
+    fn test_pick_one_boundaries() {
+        // 要素数が1の場合は、必ずインデックス 0 が返る
+        assert_eq!(pick_one(1), 0);
+
+        // 要素数 5 の場合、返ってくる値が 0..5 (0, 1, 2, 3, 4) の範囲内に収まっているかチェック
+        for _ in 0..100 {
+            let idx = pick_one(5);
+            assert!(idx < 5);
+        }
+    }
+
+    #[test]
+    fn test_pick_one_statistics() {
+        // 0, 1, 2 の3つのインデックスが、概ね均等（各33%前後）に選ばれるか検証
+        let mut counts = [0; 3];
+        let trials = 30000;
+
+        for _ in 0..trials {
+            let idx = pick_one(3);
+            counts[idx] += 1;
+        }
+
+        // 各インデックスが 9,000回 〜 11,000回（期待値10,000回 ±10%）の範囲に入っているか確認
+        for &count in &counts {
+            assert!(count > 9000 && count < 11000);
+        }
     }
 }
