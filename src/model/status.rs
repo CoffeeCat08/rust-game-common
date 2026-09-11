@@ -16,15 +16,16 @@
 //!   * `apply_action_subtract`: actionによる減産処理. ex:攻撃する等
 //!   * `apply_action_add`: actionによる加算処理
 
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum StatusError {
     MinLimitReached,
     MaxLimitReached,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub struct BoundedStatus {
     pub current: f32,
     pub min: f32,

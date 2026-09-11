@@ -18,10 +18,5 @@ pub mod utility {
 }
 
 pub mod examples {
-    pub mod like_ken {
-        pub mod status {
-            pub mod character;
-        }
-    }
     pub mod demo;
 }
